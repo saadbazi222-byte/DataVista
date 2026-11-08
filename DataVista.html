@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><title>DataVista</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;800&display=swap">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/5.5.0/echarts.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+<style>
+:root{--bg:#FAF9FF;--card:#fff;--b:#E4E0F2;--t:#201D35;--m:#88849B;--p:#6D4AFF;--soft:#EEE9FF;--ok:#10b981;--bad:#f43f5e;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);color-scheme:light}
+@media(prefers-color-scheme:dark){:root:not([data-theme=light]){--bg:#0D0D18;--card:#141426;--b:#2a2845;--t:#ECEAF8;--m:#9a96b3;--soft:#1D1B31;color-scheme:dark}}
+:root[data-theme=dark]{--bg:#0D0D18;--card:#141426;--b:#2a2845;--t:#ECEAF8;--m:#9a96b3;--soft:#1D1B31;color-scheme:dark}
+*{box-sizing:border-box}html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--t);font:500 14px/1.5 Manrope,system-ui,sans-serif;font-variant-numeric:tabular-nums}
+.app{display:grid;grid-template-columns:210px 1fr;min-height:100vh}
+nav{background:var(--card);border-right:1px solid var(--b);padding:18px 12px;position:sticky;top:0;height:100vh}
+.logo{font-weight:800;font-size:19px;padding:0 10px 18px;display:flex;gap:8px;align-items:center}
+.logo i{width:22px;height:22px;border-radius:7px;background:linear-gradient(135deg,#6D4AFF,#9B7BFF)}
+nav a{display:block;padding:9px 12px;border-radius:9px;color:var(--m);text-decoration:none;font-weight:600;margin-bottom:2px;transition:background .15s,color .15s}
+nav a:hover{background:var(--soft);color:var(--t)}nav a.on{background:var(--soft);color:var(--p);box-shadow:inset 3px 0 var(--p)}
+nav small{display:block;color:var(--m);padding:14px 12px;font-size:11px;line-height:1.4}
+main{padding:24px 28px;min-width:0}
+.top{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:20px}
+h1{font-size:24px;margin:0;font-weight:800;letter-spacing:-.02em}h2{font-size:15px;margin:0 0 10px}
+.sub{color:var(--m);margin:2px 0 0}
+button,select,input{font:inherit;color:var(--t)}
+.btn{background:var(--p);color:#fff;border:0;border-radius:9px;padding:8px 14px;font-weight:600;cursor:pointer;transition:transform .12s,opacity .12s}
+.btn:hover{opacity:.9}.btn:active{transform:scale(.97)}.btn.g{background:var(--soft);color:var(--p)}
+button:focus-visible,a:focus-visible,select:focus-visible,input:focus-visible{outline:2px solid var(--p);outline-offset:2px}
+select,input[type=text],input[type=search],textarea{background:var(--card);border:1px solid var(--b);border-radius:8px;padding:7px 9px;max-width:100%}
+.card{background:var(--card);border:1px solid var(--b);border-radius:14px;padding:16px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin-bottom:16px}
+.k{font-size:28px;font-weight:800;letter-spacing:-.02em}.k small{display:block;font-size:12px;color:var(--m);font-weight:600;letter-spacing:0}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:end;margin-bottom:14px}.row label{display:grid;gap:3px;font-size:12px;color:var(--m);font-weight:600}
+.tw{overflow:auto;max-height:420px;border:1px solid var(--b);border-radius:10px}
+table{border-collapse:collapse;width:100%;font-size:13px}th,td{padding:7px 12px;text-align:left;white-space:nowrap;border-bottom:1px solid var(--b)}
+th{position:sticky;top:0;background:var(--soft);cursor:pointer;z-index:1}td.n{text-align:right}th small{color:var(--m);font-weight:500}
+.empty{text-align:center;padding:48px 16px}.empty p{color:var(--m);max-width:420px;margin:6px auto 16px}
+#chart{height:400px;width:100%}
+.ins{border-left:3px solid var(--p);padding:6px 12px;margin:8px 0;background:var(--soft);border-radius:0 8px 8px 0}.ins small{display:block;color:var(--m)}
+#toast{position:fixed;bottom:calc(20px + env(safe-area-inset-bottom,0px));left:50%;transform:translate(-50%,20px);background:var(--t);color:var(--bg);padding:9px 16px;border-radius:10px;opacity:0;transition:.25s;pointer-events:none;z-index:9}
+#toast.s{opacity:1;transform:translate(-50%,0)}
+@media(max-width:760px){.app{grid-template-columns:1fr}nav{position:static;height:auto;display:flex;overflow-x:auto;padding:8px;gap:4px;border-right:0;border-bottom:1px solid var(--b)}.logo,nav small{display:none}nav a{white-space:nowrap;margin:0}main{padding:16px}.top{flex-wrap:wrap}}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+</style></head><body>
+<div class="app"><nav aria-label="Main"><div class="logo"><i></i>DataVista</div>
+<a href="#overview">Overview</a><a href="#data">Data workspace</a><a href="#chart">Chart studio</a><a href="#insights">Insights</a>
+<small>Your data stays in this browser. Nothing is uploaded, and nothing syncs across devices.</small></nav>
+<main><div class="top"><div><h1 id="h"></h1><p class="sub" id="s"></p></div>
+<div class="row" style="margin:0"><button class="btn g" id="th">Switch theme</button></div></div><div id="v"></div></main></div>
+<div id="toast" role="status"></div>
+<script>
+const $=s=>document.querySelector(s),esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fmt=x=>typeof x==='number'?(Number.isInteger(x)?x.toLocaleString():x.toLocaleString(undefined,{maximumFractionDigits:2})):x;
+let ds=null,hist=[],sortC=-1,sortD=1,q='',page=0,ch=null,cfg={type:'bar',x:0,y:1,agg:'sum',title:''};
+try{ds=JSON.parse(localStorage.getItem('dv_ds'))}catch(e){}
+function save(){try{localStorage.setItem('dv_ds',JSON.stringify(ds))}catch(e){toast('Could not save: browser storage is full or blocked.')}}
+function toast(m){const t=$('#toast');t.textContent=m;t.className='s';clearTimeout(toast.h);toast.h=setTimeout(()=>t.className='',2600)}
+const num=v=>{if(v===''||v==null)return NaN;const n=Number(String(v).replace(/[,\s]/g,''));return n};
+function detect(vals){const f=vals.filter(v=>v!==''&&v!=null);if(!f.length)return'text';
+ if(f.filter(v=>!isNaN(num(v))).length/f.length>=.9)return'number';
+ if(f.filter(v=>/\d/.test(v)&&!isNaN(Date.parse(v))).length/f.length>=.9)return'date';return'text'}
+function load(name,header,rows){rows=rows.filter(r=>r.some(c=>String(c).trim()!==''));
+ if(!rows.length||!header.length)return toast('No data rows found in that input.');
+ const cols=header.map((h,i)=>{const t=detect(rows.map(r=>r[i]));return{name:String(h||'Column '+(i+1)).trim(),type:t}});
+ rows=rows.map(r=>cols.map((c,i)=>{const v=r[i]??'';return c.type==='number'&&v!==''&&!isNaN(num(v))?num(v):String(v).trim()}));
+ ds={name,cols,rows};hist=[];save();cfg.x=cols.findIndex(c=>c.type!=='number');if(cfg.x<0)cfg.x=0;cfg.y=cols.findIndex(c=>c.type==='number');if(cfg.y<0)cfg.y=0;
+ toast(`Imported ${rows.length.toLocaleString()} rows, ${cols.length} columns.`);location.hash='#data';route()}
+function sample(){const M=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'],R=['North','South','East'],rows=[];
+ M.forEach((m,i)=>R.forEach((r,j)=>{const u=80+((i*37+j*53)%60)+i*4;rows.push([m,r,u,u*(18+j*2)])}));
+ load('Monthly sales (illustrative sample)',['Month','Region','Units','Revenue'],rows)}
+function stats(a){a=a.filter(x=>typeof x==='number').sort((x,y)=>x-y);const n=a.length;if(!n)return null;
+ const qf=p=>{const i=(n-1)*p,l=Math.floor(i);return a[l]+(a[Math.min(l+1,n-1)]-a[l])*(i-l)};
+ const s=a.reduce((x,y)=>x+y,0),mean=s/n,v=n>1?a.reduce((x,y)=>x+(y-mean)**2,0)/(n-1):0;
+ return{n,sum:s,mean,median:qf(.5),min:a[0],max:a[n-1],sd:Math.sqrt(v),q1:qf(.25),q3:qf(.75)}}
+function pearson(x,y){const p=x.map((a,i)=>[a,y[i]]).filter(([a,b])=>typeof a==='number'&&typeof b==='number');if(p.length<3)return null;
+ const mx=p.reduce((s,r)=>s+r[0],0)/p.length,my=p.reduce((s,r)=>s+r[1],0)/p.length;let sxy=0,sx=0,sy=0;
+ p.forEach(([a,b])=>{sxy+=(a-mx)*(b-my);sx+=(a-mx)**2;sy+=(b-my)**2});return sx&&sy?sxy/Math.sqrt(sx*sy):null}
+const colv=i=>ds.rows.map(r=>r[i]);
+function agg(vals,k){if(k==='count')return vals.length;const a=vals.filter(v=>typeof v==='number').sort((x,y)=>x-y);if(!a.length)return 0;
+ return k==='sum'?a.reduce((x,y)=>x+y,0):k==='avg'?a.reduce((x,y)=>x+y,0)/a.length:k==='min'?a[0]:k==='max'?a[a.length-1]:(a.length%2?a[(a.length-1)/2]:(a[a.length/2-1]+a[a.length/2])/2)}
+const T={overview:['Overview','Your data tells a story. Let’s discover it.'],data:['Data workspace','Import, inspect and clean your dataset.'],chart:['Chart studio','Pick columns and build a chart from your real data.'],insights:['Insights','Statistics calculated from your dataset, with the columns used.']};
+const empty=(msg)=>`<div class="card empty"><h2>No dataset yet</h2><p>${msg||'Import a CSV file, paste rows from a spreadsheet, or open the sample dataset to explore.'}</p><button class="btn" data-a="pick">Import CSV</button> <button class="btn g" data-a="sample">Open sample dataset</button></div>`;
+const V={
+overview(){if(!ds)return empty('Import data, build a chart, then read the insights. Everything runs in your browser.');
+ const miss=ds.rows.flat().filter(v=>v==='').length,dup=ds.rows.length-new Set(ds.rows.map(r=>r.join('\u0001'))).size;
+ const ks=[['Rows',ds.rows.length],['Columns',ds.cols.length],['Missing values',miss],['Duplicate rows',dup],['Numeric columns',ds.cols.filter(c=>c.type==='number').length]];
+ return`<div class="grid">${ks.map(k=>`<div class="card k">${fmt(k[1])}<small>${k[0]}</small></div>`).join('')}</div><div class="card"><h2>${esc(ds.name)}</h2><p class="sub">Dataset saved in this browser. Open the data workspace to clean it or chart studio to visualize it.</p><button class="btn" onclick="location.hash='#chart'">Build a chart</button></div>`},
+data(){const imp=`<div class="card" style="margin-bottom:14px"><h2>Import</h2><div class="row"><button class="btn" data-a="pick">Choose CSV file</button><button class="btn g" data-a="sample">Open sample dataset</button><button class="btn g" data-a="clear">Delete stored data</button></div>
+<textarea id="paste" rows="3" style="width:100%" placeholder="Or paste rows copied from a spreadsheet (first row = headers)"></textarea><div style="margin-top:8px"><button class="btn g" data-a="paste">Import pasted data</button></div></div>`;
+ if(!ds)return imp+empty();
+ let rows=ds.rows.map((r,i)=>[i+1,...r]);if(q)rows=rows.filter(r=>r.some(c=>String(c).toLowerCase().includes(q)));
+ if(sortC>=0)rows.sort((a,b)=>(a[sortC+1]>b[sortC+1]?1:a[sortC+1]<b[sortC+1]?-1:0)*sortD);
+ const per=50,pages=Math.max(1,Math.ceil(rows.length/per));page=Math.min(page,pages-1);
+ return imp+`<div class="card"><div class="row"><label>Search<input type="search" id="q" value="${esc(q)}"></label><button class="btn g" data-a="dedupe">Remove duplicate rows</button><button class="btn g" data-a="undo" ${hist.length?'':'disabled'}>Undo</button><span class="sub">${rows.length.toLocaleString()} rows · ${esc(ds.name)}</span></div>
+<div class="tw"><table><thead><tr><th>#</th>${ds.cols.map((c,i)=>`<th data-s="${i}">${esc(c.name)} <small>${c.type}${sortC===i?(sortD>0?' ↑':' ↓'):''}</small></th>`).join('')}</tr></thead><tbody>${rows.slice(page*per,page*per+per).map(r=>`<tr>${r.map((c,i)=>`<td class="${typeof c==='number'?'n':''}">${esc(typeof c==='number'&&i?fmt(c):c)}</td>`).join('')}</tr>`).join('')}</tbody></table></div>
+<div class="row" style="margin:10px 0 0"><button class="btn g" data-a="prev">Previous</button><span>Page ${page+1} of ${pages}</span><button class="btn g" data-a="next">Next</button></div></div>`},
+chart(){if(!ds)return empty();const opt=(arr,sel)=>arr.map(([v,l])=>`<option value="${v}" ${String(sel)===String(v)?'selected':''}>${esc(l)}</option>`).join('');
+ const cs=ds.cols.map((c,i)=>[i,c.name]);
+ return`<div class="card"><div class="row"><label>Chart type<select id="ct">${opt([['bar','Bar'],['hbar','Horizontal bar'],['line','Line'],['area','Area'],['pie','Pie'],['donut','Doughnut'],['scatter','Scatter'],['hist','Histogram']],cfg.type)}</select></label>
+<label>X / category<select id="cx">${opt(cs,cfg.x)}</select></label><label>Y / value<select id="cy">${opt(cs,cfg.y)}</select></label>
+<label>Aggregation<select id="ca">${opt([['sum','Sum'],['avg','Average'],['count','Count'],['min','Minimum'],['max','Maximum'],['median','Median']],cfg.agg)}</select></label>
+<label>Title<input type="text" id="ctt" value="${esc(cfg.title)}" placeholder="Chart title"></label><button class="btn" data-a="png">Download PNG (3×)</button></div><div id="chart"></div></div>`},
+insights(){if(!ds)return empty();const nc=ds.cols.map((c,i)=>[c,i]).filter(([c])=>c.type==='number');if(!nc.length)return'<div class="card empty"><h2>No numeric columns</h2><p>Insights need at least one numeric column. Check column types in the data workspace.</p></div>';
+ let h='',tx=ds.cols.findIndex(c=>c.type==='text');
+ if(tx>=0){const [c,i]=nc[0],g={};ds.rows.forEach(r=>{if(typeof r[i]==='number')g[r[tx]]=(g[r[tx]]||0)+r[i]});const e=Object.entries(g).sort((a,b)=>b[1]-a[1]),tot=e.reduce((s,x)=>s+x[1],0);
+  if(e.length>1&&tot>0)h+=`<div class="ins"><b>${esc(e[0][0])} has the highest total ${esc(c.name)}: ${fmt(e[0][1])} (${(e[0][1]/tot*100).toFixed(1)}% of all).</b><small>Calculated by summing “${esc(c.name)}” grouped by “${esc(ds.cols[tx].name)}”.</small></div>`}
+ h+=`<div class="card" style="margin:12px 0"><h2>Summary statistics</h2><div class="tw"><table><thead><tr><th>Column</th><th>Count</th><th>Mean</th><th>Median</th><th>Min</th><th>Max</th><th>Std dev</th><th>Q1</th><th>Q3</th><th>Outliers (IQR)</th></tr></thead><tbody>`;
+ nc.forEach(([c,i])=>{const s=stats(colv(i));if(!s)return;const lo=s.q1-1.5*(s.q3-s.q1),hi=s.q3+1.5*(s.q3-s.q1),o=colv(i).filter(v=>typeof v==='number'&&(v<lo||v>hi)).length;
+  h+=`<tr><td>${esc(c.name)}</td>${[s.n,s.mean,s.median,s.min,s.max,s.sd,s.q1,s.q3,o].map(v=>`<td class="n">${fmt(v)}</td>`).join('')}</tr>`;
+  if(o)h=h.replace('<div class="card"',`<div class="ins">A possible outlier pattern: ${o} value(s) in “${esc(c.name)}” fall outside ${fmt(lo)} to ${fmt(hi)}.<small>IQR method: beyond 1.5 × the interquartile range. Possible, not confirmed.</small></div><div class="card"`)});
+ h+='</tbody></table></div></div>';
+ if(nc.length>1){h+=`<div class="card"><h2>Correlation (Pearson)</h2><div class="tw"><table><thead><tr><th></th>${nc.map(([c])=>`<th>${esc(c.name)}</th>`).join('')}</tr></thead><tbody>`;
+  nc.forEach(([a,i])=>{h+=`<tr><th>${esc(a.name)}</th>${nc.map(([b,j])=>{const r=i===j?1:pearson(colv(i),colv(j));return`<td class="n" style="background:${r==null?'transparent':r>=0?`rgba(109,74,255,${Math.abs(r)*.6})`:`rgba(244,63,94,${Math.abs(r)*.6})`}">${r==null?'n/a':r.toFixed(2)}</td>`}).join('')}</tr>`});
+  h+='</tbody></table></div><p class="sub">Correlation does not establish causation. Pairs with fewer than 3 complete values show n/a.</p></div>'}
+ return h}};
+function draw(){const el=$('#chart');if(!el||!ds)return;if(ch)ch.dispose();ch=echarts.init(el);
+ const dk=getComputedStyle(document.body).colorScheme==='dark',tc=dk?'#ECEAF8':'#201D35',P=['#6D4AFF','#06b6d4','#10b981','#f59e0b','#f43f5e','#3b82f6','#9B7BFF'];
+ const {type,x,y,agg:a}=cfg,t=cfg.title||`${ds.cols[y].name} by ${ds.cols[x].name}`;let o={color:P,animationDuration:500,title:{text:t,textStyle:{color:tc,fontSize:15}},tooltip:{trigger:type==='scatter'||type==='pie'||type==='donut'?'item':'axis'},textStyle:{color:tc,fontFamily:'Manrope'},grid:{left:60,right:20,top:50,bottom:60},toolbox:{feature:{dataZoom:{}}}};
+ if(type==='scatter'){const d=ds.rows.map(r=>[r[x],r[y]]).filter(r=>typeof r[0]==='number'&&typeof r[1]==='number');
+  if(!d.length)return el.innerHTML='<p class="sub">Scatter plots need two numeric columns.</p>';o.xAxis={type:'value',name:ds.cols[x].name};o.yAxis={type:'value',name:ds.cols[y].name};o.series=[{type:'scatter',data:d,symbolSize:9}]}
+ else if(type==='hist'){const v=colv(y).filter(n=>typeof n==='number');if(!v.length)return el.innerHTML='<p class="sub">Histograms need a numeric Y column.</p>';
+  const mn=Math.min(...v),mx=Math.max(...v),k=10,w=(mx-mn)/k||1,b=Array(k).fill(0);v.forEach(n=>b[Math.min(k-1,Math.floor((n-mn)/w))]++);
+  o.xAxis={type:'category',data:b.map((_,i)=>fmt(+(mn+i*w).toFixed(2)))};o.yAxis={type:'value',name:'Count'};o.series=[{type:'bar',data:b,barCategoryGap:'5%'}]}
+ else{const g=new Map();ds.rows.forEach(r=>{const k=r[x];if(!g.has(k))g.set(k,[]);g.get(k).push(r[y])});const e=[...g].map(([k,v])=>[String(k),+agg(v,a).toFixed(4)]);
+  if(type==='pie'||type==='donut'){o.series=[{type:'pie',radius:type==='donut'?['45%','70%']:'70%',data:e.map(([n,v])=>({name:n,value:v}))}];o.legend={bottom:0,textStyle:{color:tc}}}
+  else{const h=type==='hbar',c=h?'yAxis':'xAxis',vl=h?'xAxis':'yAxis';o[c]={type:'category',data:e.map(z=>z[0]),name:h?'':ds.cols[x].name};o[vl]={type:'value',name:a+' of '+ds.cols[y].name};
+   o.series=[{type:type==='line'||type==='area'?'line':'bar',smooth:true,areaStyle:type==='area'?{}:undefined,data:e.map(z=>z[1]),itemStyle:{borderRadius:h?[0,4,4,0]:[4,4,0,0]}}]}}
+ ch.setOption(o)}
+function route(){const k=(location.hash||'#overview').slice(1);const r=T[k]?k:'overview';$('#h').textContent=T[r][0];$('#s').textContent=T[r][1];
+ document.querySelectorAll('nav a').forEach(a=>a.classList.toggle('on',a.hash==='#'+r));$('#v').innerHTML=V[r]();if(r==='chart')draw()}
+const fi=document.createElement('input');fi.type='file';fi.accept='.csv,.tsv,.txt';
+fi.onchange=()=>{const f=fi.files[0];if(!f)return;if(f.size>25e6)return toast('File is over 25 MB. Try a smaller file.');
+ Papa.parse(f,{skipEmptyLines:true,complete:r=>{if(r.errors.length&&!r.data.length)return toast('Could not read that file as CSV.');load(f.name,r.data[0],r.data.slice(1))},error:()=>toast('Could not read that file.')});fi.value=''};
+document.addEventListener('click',e=>{const t=e.target.closest('[data-a],th[data-s]');if(!t)return;
+ if(t.dataset.s!==undefined){const i=+t.dataset.s;sortD=sortC===i?-sortD:1;sortC=i;return route()}
+ const a=t.dataset.a;
+ if(a==='pick')fi.click();else if(a==='sample')sample();
+ else if(a==='paste'){const v=$('#paste').value.trim();if(!v)return toast('Paste some rows first.');const r=Papa.parse(v,{skipEmptyLines:true});load('Pasted data',r.data[0],r.data.slice(1))}
+ else if(a==='clear'){if(confirm('Delete the stored dataset from this browser? This cannot be undone.')){ds=null;hist=[];localStorage.removeItem('dv_ds');toast('Stored data deleted.');route()}}
+ else if(a==='dedupe'){const seen=new Set(),n=ds.rows.length;const keep=ds.rows.filter(r=>{const k=r.join('\u0001');if(seen.has(k))return false;seen.add(k);return true});
+  if(keep.length===n)return toast('No duplicate rows found.');hist.push(ds.rows);ds.rows=keep;save();toast(`Removed ${n-keep.length} duplicate rows. Undo is available.`);route()}
+ else if(a==='undo'&&hist.length){ds.rows=hist.pop();save();toast('Change undone.');route()}
+ else if(a==='prev'){page=Math.max(0,page-1);route()}else if(a==='next'){page++;route()}
+ else if(a==='png'&&ch){const u=ch.getDataURL({pixelRatio:3,backgroundColor:getComputedStyle(document.body).backgroundColor}),l=document.createElement('a');l.href=u;l.download='datavista-chart.png';l.click();toast('PNG downloaded.')}});
+document.addEventListener('input',e=>{if(e.target.id==='q'){q=e.target.value.toLowerCase();page=0;const p=e.target.selectionStart;route();const n=$('#q');n.focus();n.setSelectionRange(p,p)}});
+document.addEventListener('change',e=>{const m={ct:'type',cx:'x',cy:'y',ca:'agg',ctt:'title'}[e.target.id];if(m){cfg[m]=['x','y'].includes(m)?+e.target.value:e.target.value;draw()}});
+$('#th').onclick=()=>{const d=getComputedStyle(document.body).colorScheme==='dark';document.documentElement.dataset.theme=d?'light':'dark';localStorage.setItem('dv_theme',d?'light':'dark');if(ch)draw()};
+{const t=localStorage.getItem('dv_theme');if(t)document.documentElement.dataset.theme=t}
+addEventListener('hashchange',route);addEventListener('resize',()=>ch&&ch.resize());route();
+</script></body></html>
